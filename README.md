@@ -181,116 +181,118 @@ todolist/
 ## Arsitektur Sistem
 
 ```
-+-------------------+     +-------------------+     +------------------+
-|                   |     |                   |     |                  |
-|     TodoCLI       |     |   TodoService     |     |     TodoDao      |
-|    (View Layer)   |     | (Business Layer)  |     |   (Data Layer)   |
-|                   |     |                   |     |                  |
-+--------+----------+     +---------+---------+     +---------+--------+
-         |                          |                         |
-         |                          |                         |
-         |                          |                         |
-         |                          |                         |
-    User Input                Business Logic            Data Access
-         |                          |                         |
-         |                          |                         |
-         v                          v                         v
-+------------------+      +-------------------+     +-------------------+
-|                  |      |                   |     |                   |
-|   User Interface |      | Data Validation   |     |    Database      |
-|   Input/Output   |      | Business Rules    |     |    Operations    |
-|                  |      |                   |     |                   |
-+------------------+      +-------------------+     +-------------------+
-         |                          |                         |
-         |                          |                         |
-         |                          |                         |
-         v                          v                         v
-+----------------------------------------------------------|
-|                                                           |
-|                      MySQL Database                       |
-|                                                           |
-+-----------------------------------------------------------+
+┌─────────────┐     ┌──────────────┐     ┌──────────────┐     ┌──────────────┐
+│             │     │              │     │              │     │              │
+│   TodoCLI   │────▶│ TodoService  │────▶│   TodoDAO    │────▶│   Database   │
+│  (View)     │     │ (Business)   │     │  (Data)      │     │   (MySQL)    │
+│             │     │              │     │              │     │              │
+└─────────────┘     └──────────────┘     └──────────────┘     └──────────────┘
+       ▲                   ▲                    ▲                     ▲
+       │                   │                    │                     │
+       │                   │                    │                     │
+┌──────┴──────┐     ┌─────┴──────┐      ┌─────┴──────┐      ┌──────┴──────┐
+│  Interface   │     │  Service    │      │    DAO      │      │  Database   │
+│   Layer      │     │   Layer     │      │   Layer     │      │  Config     │
+└─────────────┘     └────────────┘      └────────────┘      └────────────┘
+    TodoCLI.java     TodoService.java     TodoDao.java        MySqlConfig.java
+                    TodoServiceImpl.java   TodoDaoJdbc.java    DatabaseConfig.java
+                                         TodoReader.java      DatabaseConnection.java
+                                         TodoWriter.java
 
+┌─────────────────────────────────────────────────────────────────┐
+│                        TodoFactory (DI Container)                │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
 ### Penjelasan Komponen Arsitektur
 
-1. **View Layer (Presentation Layer)**
+1. **Interface Layer (Presentation Layer)**
 
-   - Implementasi: `TodoCLI.java`
-   - Tanggung jawab:
-     - Menampilkan interface ke user
-     - Menerima input user
-     - Menampilkan output/hasil
-   - Prinsip SOLID: Single Responsibility Principle
+   - Komponen: `TodoCLI`
+   - Fungsi:
+     - Menangani interaksi dengan pengguna
+     - Menampilkan menu dan opsi
+     - Meneruskan input pengguna ke Service Layer
+   - Implementasi SOLID: Single Responsibility Principle
 
 2. **Service Layer (Business Layer)**
 
-   - Implementasi: `TodoService.java`, `TodoServiceImpl.java`
-   - Tanggung jawab:
-     - Implementasi business logic
+   - Komponen: `TodoService`, `TodoServiceImpl`
+   - Fungsi:
+     - Implementasi logika bisnis
      - Validasi data
-     - Koordinasi antara View dan Data layer
-   - Prinsip SOLID: Open/Closed Principle, Liskov Substitution Principle
+     - Koordinasi antara Interface dan DAO Layer
+   - Implementasi SOLID: Open/Closed Principle, Liskov Substitution
 
-3. **Data Access Layer**
+3. **DAO Layer (Data Access Layer)**
 
-   - Implementasi: `TodoDao.java`, `TodoDaoJdbc.java`
-   - Interface: `TodoReader.java`, `TodoWriter.java`
-   - Tanggung jawab:
-     - Operasi database (CRUD)
-     - Mapping data antara aplikasi dan database
-   - Prinsip SOLID: Interface Segregation Principle
+   - Komponen: `TodoDao`, `TodoDaoJdbc`, `TodoReader`, `TodoWriter`
+   - Fungsi:
+     - Menangani operasi CRUD ke database
+     - Mengkonversi data antara objek dan database
+   - Implementasi SOLID: Interface Segregation, Dependency Inversion
 
-4. **Model**
+4. **Database Configuration**
 
-   - Implementasi: `Todo.java`
-   - Tanggung jawab:
+   - Komponen: `DatabaseConfig`, `MySqlConfig`, `DatabaseConnection`
+   - Fungsi:
+     - Konfigurasi koneksi database
+     - Manajemen koneksi database
+   - Implementasi SOLID: Dependency Inversion
+
+5. **Model**
+
+   - Komponen: `Todo`
+   - Fungsi:
      - Representasi data
      - Enkapsulasi properti todo
 
-5. **Database Configuration**
-
-   - Implementasi: `DatabaseConfig.java`, `MySqlConfig.java`
-   - Tanggung jawab:
-     - Konfigurasi koneksi database
-     - Abstraksi detail koneksi
-
-6. **Factory**
-   - Implementasi: `TodoFactory.java`
-   - Tanggung jawab:
-     - Object creation
-     - Dependency injection
-   - Prinsip SOLID: Dependency Inversion Principle
+6. **Factory (Dependency Injection)**
+   - Komponen: `TodoFactory`
+   - Fungsi:
+     - Inisialisasi dan konfigurasi komponen
+     - Menghubungkan dependencies antar layer
+   - Implementasi SOLID: Dependency Inversion
 
 ### Alur Data (Data Flow)
 
-1. User berinteraksi dengan `TodoCLI`
-2. `TodoCLI` meneruskan request ke `TodoService`
-3. `TodoService` memproses business logic
-4. `TodoDao` melakukan operasi database
-5. Data mengalir kembali ke user melalui jalur yang sama
+1. **User Input Flow**
+
+   ```
+   User → TodoCLI → TodoService → TodoDao → Database
+   ```
+
+   - User memberikan input melalui CLI
+   - TodoCLI memproses input dan memanggil TodoService
+   - TodoService menjalankan logika bisnis
+   - TodoDao melakukan operasi database
+
+2. **Data Output Flow**
+   ```
+   Database → TodoDao → TodoService → TodoCLI → User
+   ```
+   - Data diambil dari database melalui TodoDao
+   - TodoService memproses data sesuai kebutuhan
+   - TodoCLI menampilkan hasil ke user
 
 ### Keuntungan Arsitektur
 
-1. **Loose Coupling**
+1. **Modular dan Terstruktur**
 
-   - Setiap layer independen dan dapat dimodifikasi tanpa mempengaruhi layer lain
-   - Memudahkan maintenance dan testing
+   - Setiap layer memiliki tanggung jawab yang jelas
+   - Mudah untuk maintenance dan testing
+   - Perubahan pada satu layer tidak mempengaruhi layer lain
 
-2. **High Cohesion**
+2. **Loose Coupling**
 
-   - Setiap komponen memiliki tanggung jawab yang jelas dan terfokus
-   - Implementasi SOLID principles yang konsisten
+   - Implementasi SOLID principles
+   - Interface-based programming
+   - Dependency injection melalui TodoFactory
 
-3. **Scalability**
-
-   - Mudah untuk menambah fitur baru
-   - Mudah untuk mengganti implementasi (misalnya mengubah database)
-
-4. **Maintainability**
-   - Kode terorganisir dengan baik
-   - Mudah untuk debug dan troubleshoot
+3. **Extensible**
+   - Mudah menambah fitur baru
+   - Mudah mengganti implementasi (misalnya database)
+   - Open untuk ekstensi, closed untuk modifikasi
 
 ## Requirements
 
