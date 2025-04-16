@@ -183,16 +183,16 @@ todolist/
 ```
 ┌─────────────┐     ┌──────────────┐     ┌──────────────┐     ┌──────────────┐
 │             │     │              │     │              │     │              │
-│   TodoCLI   │────▶│ TodoService  │────▶│   TodoDAO    │────▶│   Database   │
+│   TodoCLI   │────▶│ TodoService │────▶│   TodoDAO    │────▶│   Database  │
 │  (View)     │     │ (Business)   │     │  (Data)      │     │   (MySQL)    │
 │             │     │              │     │              │     │              │
 └─────────────┘     └──────────────┘     └──────────────┘     └──────────────┘
-       ▲                   ▲                    ▲                     ▲
-       │                   │                    │                     │
-       │                   │                    │                     │
-┌──────┴──────┐     ┌─────┴──────┐      ┌─────┴──────┐      ┌──────┴──────┐
-│  Interface   │     │  Service    │      │    DAO      │      │  Database   │
-│   Layer      │     │   Layer     │      │   Layer     │      │  Config     │
+       ▲                  ▲                   ▲                    ▲
+       │                  │                   │                    │
+       │                  │                   │                    │
+┌──────┴──────┐     ┌─────┴──────┐      ┌─────┴──────┐      ┌──────┴─────┐
+│  Interface  │     │  Service   │      │    DAO     │      │  Database  │
+│   Layer     │     │   Layer    │      │   Layer    │      │  Config    │
 └─────────────┘     └────────────┘      └────────────┘      └────────────┘
     TodoCLI.java     TodoService.java     TodoDao.java        MySqlConfig.java
                     TodoServiceImpl.java   TodoDaoJdbc.java    DatabaseConfig.java
@@ -200,7 +200,7 @@ todolist/
                                          TodoWriter.java
 
 ┌─────────────────────────────────────────────────────────────────┐
-│                        TodoFactory (DI Container)                │
+│                        TodoFactory (DI Container)               │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
